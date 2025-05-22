@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chordopad - Edit Lagu</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+  <input id="songTitleInput" type="text" placeholder="Judul lagu" />
+  <div class="meta-inputs">
+  <input type="text" id="author" placeholder="Penulis / Artis" />
+  <input type="text" id="capo" placeholder="Capo (opsional)" />
+</div>
+
+    <div class="toolbar">
+      <button onclick="goBack()">← Kembali</button>
+      <button onclick="transpose(-1)">⬇</button>
+      <span id="transposeInfo">Transpose: 0</span>
+      <button onclick="transpose(1)">⬆</button>
+      <button onclick="saveSong()">💾 Simpan</button>
+      <button onclick="deleteSong()">🗑️ Hapus</button>
+    </div>
+
+    <textarea id="editor" placeholder="Tulis chord + lirik di sini..." oninput="updatePreview()"></textarea>
+    <div id="preview" class="preview"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
