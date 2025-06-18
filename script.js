@@ -255,28 +255,30 @@ function exportSong() {
     return;
   }
 
-  const PASTEBIN_DEV_KEY = 'kGCBY1wIb2tRPCDHn1tW-FQ8FODE04J6'; // <---- GANTI DI SINI
+  const gistData = {
+    description: `Chord: ${title}`,
+    public: true,
+    files: {
+      [`${title}.json`]: {
+        content: raw
+      }
+    }
+  };
 
-  const formData = new URLSearchParams();
-  formData.append("api_dev_key", PASTEBIN_DEV_KEY);
-  formData.append("api_option", "paste");
-  formData.append("api_paste_code", title); // optional: paste title
-  formData.append("api_paste_name", title); // optional: shows in pastebin UI
-  formData.append("api_paste_data", raw);
-  formData.append("api_paste_format", "json");
-  formData.append("api_paste_private", "1"); // unlisted (0=public, 1=unlisted, 2=private)
-
-  fetch("https://pastebin.com/api/api_post.php", {
+  fetch("https://api.github.com/gists", {
     method: "POST",
-    body: formData
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(gistData)
   })
-    .then(res => res.text())
-    .then(link => {
-      if (link.startsWith("http")) {
-        const rawLink = link.replace("pastebin.com/", "pastebin.com/raw/");
-        prompt("Berhasil! Copy link ini untuk dibagikan:", rawLink);
+    .then(res => res.json())
+    .then(data => {
+      if (data.files && data.files[`${title}.json`]) {
+        const rawUrl = data.files[`${title}.json`].raw_url;
+        prompt("Berhasil! Copy link ini untuk dibagikan:", rawUrl);
       } else {
-        alert("Gagal menyimpan ke Pastebin:\n" + link);
+        alert("Gagal menyimpan Gist:\n" + (data.message || "Unknown error"));
       }
     })
     .catch(err => {
@@ -286,7 +288,7 @@ function exportSong() {
 }
 
 function importSongFromURL() {
-  const input = prompt("Masukkan URL Pastebin (raw):\nContoh: https://pastebin.com/raw/lembudahbelidahbelah");
+  const input = prompt("Masukkan URL (raw)\nContoh: https://gist.githubusercontent.com/campersand/abc123");
   if (!input) return;
 
   fetch(input)
