@@ -8,10 +8,12 @@
 </head>
 <body>
   <div class="container">
-    <h1>🎹 Chordopad 🎸</h1>
+    <h1>🎶 Daftar Lagu</h1>
     <div class="toolbar">
       <input type="text" id="search" placeholder="Cari lagu..." />
-      <button onclick="createNewSong()">➕ Lagu Baru</button>
+      <button onclick="createNewSong()">＋ Lagu Baru</button>
+      <button onclick="importSongFromURL()">🌐 Impor URL</button>
+      <button onclick="location.href='playlists.html'">📁 Lihat Playlist</button>
     </div>
     <div id="songList" class="song-list"></div>
   </div>

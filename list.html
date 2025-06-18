@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chordopad - Isi Playlist</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .dragging {
+      opacity: 0.5;
+    }
+    .drag-over {
+      border: 2px dashed #00ffff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 id="playlistTitle">📃 Playlist</h1>
+
+    <div class="toolbar">
+      <button onclick="goBack()">← Kembali</button>
+      <button onclick="addSong()">➕ Tambah Lagu</button>
+      <button onclick="renamePlaylist()">✏️ Ganti Nama</button>
+      <button onclick="saveOrder()">💾 Simpen</button>
+    </div>
+
+    <div id="trackList" class="song-list"></div>
+  </div>
+
+  <script>
+    let playlistName = '';
+    let songs = [];
+
+    function getName() {
+      const params = new URLSearchParams(location.search);
+      return params.get('name') || 'Untitled';
+    }
+
+    function goBack() {
+      location.href = 'playlists.html';
+    }
+
+    function loadList() {
+      playlistName = getName();
+      document.getElementById('playlistTitle').textContent = `📃 ${playlistName}`;
+      const raw = localStorage.getItem(`playlist_${playlistName}`);
+      try {
+        songs = JSON.parse(raw) || [];
+      } catch {
+        songs = [];
+      }
+      renderSongs();
+    }
+
+    function renderSongs() {
+      const list = document.getElementById('trackList');
+      list.innerHTML = '';
+
+      songs.forEach((title, index) => {
+        const item = document.createElement('div');
+        item.className = 'songItem';
+        item.setAttribute('draggable', true);
+        item.setAttribute('data-index', index);
+
+        item.innerHTML = `
+          <span>${title}</span>
+          <div>
+            <button onclick="viewSong('${title}')">👁️ Lihat</button>
+            <button onclick="removeSong(${index})">❌ Hapus</button>
+          </div>
+        `;
+
+        // Drag handlers
+        item.addEventListener('dragstart', dragStart);
+        item.addEventListener('dragover', dragOver);
+        item.addEventListener('dragleave', dragLeave);
+        item.addEventListener('drop', drop);
+        item.addEventListener('dragend', dragEnd);
+
+        list.appendChild(item);
+      });
+    }
+
+    function viewSong(title) {
+      location.href = `preview.html?title=${encodeURIComponent(title)}`;
+    }
+
+    function addSong() {
+  const input = prompt("Masukkan judul lagu yang ingin ditambahkan:");
+  if (!input) return;
+
+  const allKeys = Object.keys(localStorage).filter(k => k.startsWith('song_'));
+  const titles = allKeys.map(k => k.replace('song_', ''));
+
+  // Exact match
+  const exactMatch = titles.find(t => t.toLowerCase() === input.toLowerCase());
+  if (exactMatch) {
+    songs.push(exactMatch);
+    renderSongs();
+    return;
+  }
+
+  // Fuzzy match (substring)
+  const partialMatches = titles.filter(t => t.toLowerCase().includes(input.toLowerCase()));
+
+  if (partialMatches.length === 1) {
+    const guess = partialMatches[0];
+    const confirmGuess = confirm(`Apakah lagu yang anda maksud "${guess}"?`);
+    if (confirmGuess) {
+      songs.push(guess);
+      renderSongs();
+    }
+  } else if (partialMatches.length > 1) {
+    alert(`Terdapat ${partialMatches.length} lagu yang mirip:\n${partialMatches.join('\n')}`);
+  } else {
+    alert("Lagu tidak ditemukan di penyimpanan.");
+  }
+}
+
+
+    function removeSong(index) {
+      if (confirm(`Hapus lagu "${songs[index]}" dari playlist?`)) {
+        songs.splice(index, 1);
+        renderSongs();
+      }
+    }
+
+    function saveOrder() {
+      localStorage.setItem(`playlist_${playlistName}`, JSON.stringify(songs));
+      alert("Urutan lagu disimpan!");
+    }
+
+    function renamePlaylist() {
+      const newName = prompt("Masukkan nama baru untuk playlist:", playlistName);
+      if (!newName || newName === playlistName) return;
+
+      if (localStorage.getItem(`playlist_${newName}`)) {
+        alert("Nama playlist sudah digunakan.");
+        return;
+      }
+
+      // Salin dan hapus
+      localStorage.setItem(`playlist_${newName}`, JSON.stringify(songs));
+      localStorage.removeItem(`playlist_${playlistName}`);
+
+      // Redirect
+      location.href = `list.html?name=${encodeURIComponent(newName)}`;
+    }
+
+    // Drag & Drop Logic
+    let draggedIndex = null;
+
+    function dragStart(e) {
+      draggedIndex = +this.dataset.index;
+      this.classList.add('dragging');
+    }
+
+    function dragOver(e) {
+      e.preventDefault();
+      this.classList.add('drag-over');
+    }
+
+    function dragLeave(e) {
+      this.classList.remove('drag-over');
+    }
+
+    function drop(e) {
+      this.classList.remove('drag-over');
+      const targetIndex = +this.dataset.index;
+
+      if (draggedIndex === targetIndex) return;
+
+      const moved = songs.splice(draggedIndex, 1)[0];
+      songs.splice(targetIndex, 0, moved);
+      renderSongs();
+    }
+
+    function dragEnd(e) {
+      document.querySelectorAll('.songItem').forEach(item => {
+        item.classList.remove('dragging', 'drag-over');
+      });
+    }
+
+    loadList();
+  </script>
+</body>
+</html>

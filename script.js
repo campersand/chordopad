@@ -43,7 +43,7 @@ function loadIndex() {
       item.innerHTML = `
         <span>${songTitle}⠀⠀</span>
         <div>
-        <button onclick="viewSong('${songTitle}')">👁️ Lihat</button>
+          <button onclick="viewSong('${songTitle}')">👁️ Lihat</button>
           <button onclick="editSong('${songTitle}')">✏️ Edit</button>
           <button onclick="deleteSongFromList('${songTitle}')">🗑️ Hapus</button>
         </div>
@@ -81,18 +81,18 @@ function loadEditor() {
   if (!editor || !titleInput) return;
 
   title = getTitle();
-if (!title) {
-  title = 'Untitled';
-}
+  if (!title) {
+    title = 'Untitled';
+  }
   titleInput.value = title;
 
   const raw = localStorage.getItem(`song_${title}`);
   let data = { content: '', author: '', capo: '' };
 
   try {
-    data = JSON.parse(raw); // try to parse JSON if stored as an object
+    data = JSON.parse(raw);
   } catch {
-    data.content = raw || ''; // fallback if it's just plain text
+    data.content = raw || '';
   }
 
   editor.value = data.content || '';
@@ -140,8 +140,6 @@ function saveSong() {
   alert('Lagu disimpan!');
 }
 
-
-
 function deleteSong() {
   if (confirm("Yakin ingin menghapus lagu ini?")) {
     localStorage.removeItem(`song_${title}`);
@@ -150,7 +148,7 @@ function deleteSong() {
 }
 
 function goBack() {
-  location.href = 'index.html';
+  window.history.back();
 }
 
 function updatePreview(overrideContent = null) {
@@ -181,10 +179,11 @@ function updatePreview(overrideContent = null) {
 
   preview.innerHTML = transposed;
 }
+
 function transpose(val) {
   transposeValue += val;
   document.getElementById('transposeInfo').textContent = `Transpose: ${transposeValue}`;
-  updatePreview(); // Update preview after transpose
+  updatePreview();
 }
 
 // ========== Chord Detection & Transpose ==========
@@ -192,7 +191,6 @@ const chordRoots = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 
 const flatToSharp = { 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' };
 
 function normalizeChord(chord) {
-  // Convert flat to sharp
   const flat = chord.slice(0, 2);
   if (flatToSharp[flat]) {
     return flatToSharp[flat] + chord.slice(2);
@@ -245,7 +243,78 @@ function loadPreview() {
       .join(' • ');
   }
 
-    rawSongContent = data.content || '';
-    updatePreview(rawSongContent);
-
+  rawSongContent = data.content || '';
+  updatePreview(rawSongContent);
 }
+
+function exportSong() {
+  const title = new URLSearchParams(location.search).get("title");
+  const raw = localStorage.getItem(`song_${title}`);
+  if (!raw) {
+    alert("Lagu tidak ditemukan.");
+    return;
+  }
+
+  let song;
+  try {
+    song = JSON.parse(raw);
+  } catch (e) {
+    alert("Data lagu rusak.");
+    return;
+  }
+
+  // Tambahkan title ke data jika belum ada
+  if (!song.title) {
+    song.title = title;
+  }
+
+  fetch("https://jsonblob.com/api/jsonBlob", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(song)
+  })
+    .then(res => res.headers.get("Location"))
+    .then(link => {
+      prompt("Copy link ini dan kirim ke temanmu:", link);
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Gagal membagikan lagu.");
+    });
+}
+
+function importSongFromURL() {
+  const url = prompt("Masukkan URL lagu (file JSON):");
+  if (!url) return;
+
+  fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      // Kalau data array, ambil elemen pertama
+      if (Array.isArray(data)) {
+        data = data[0];
+      }
+
+      if (!data.title || !data.content) {
+        alert("Format lagu tidak valid.");
+        return;
+      }
+
+      const key = `song_${data.title}`;
+      if (localStorage.getItem(key)) {
+        const overwrite = confirm(`Lagu "${data.title}" sudah ada. Timpa?`);
+        if (!overwrite) return;
+      }
+
+      localStorage.setItem(key, JSON.stringify(data));
+      alert(`Lagu "${data.title}" telah disimpan!`);
+      location.reload();
+    })
+    .catch(err => {
+      alert("Gagal mengambil lagu dari URL.");
+      console.error(err);
+    });
+}
+
+
+

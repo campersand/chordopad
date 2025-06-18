@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google" content="notranslate">
+  <title>Chordopad - Semua Playlist</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>📁 Semua Playlist</h1>
+
+    <div class="toolbar">
+      <button onclick="goBack()">← Kembali</button>
+      <button onclick="createNewPlaylist()">➕ Buat Playlist</button>
+    </div>
+
+    <div id="playlistList" class="song-list"></div>
+  </div>
+
+  <script>
+    function goBack() {
+      location.href = 'index.html';
+    }
+
+    function loadPlaylists() {
+      const container = document.getElementById('playlistList');
+      container.innerHTML = '';
+
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('playlist_')) {
+          const name = key.replace('playlist_', '');
+          const div = document.createElement('div');
+          div.className = 'songItem';
+          div.innerHTML = `
+            <span>${name}⠀⠀</span>
+            <div>
+              <button onclick="viewPlaylist('${name}')">👁️ Lihat</button>
+              <button onclick="deletePlaylist('${name}')">🗑️ Hapus</button>
+            </div>
+          `;
+          container.appendChild(div);
+        }
+      });
+    }
+
+    function viewPlaylist(name) {
+      location.href = `list.html?name=${encodeURIComponent(name)}`;
+    }
+
+    function deletePlaylist(name) {
+      if (confirm(`Hapus playlist "${name}"?`)) {
+        localStorage.removeItem(`playlist_${name}`);
+        loadPlaylists();
+      }
+    }
+
+    function createNewPlaylist() {
+      const name = prompt("Nama playlist baru:");
+      if (!name) return;
+
+      const key = `playlist_${name}`;
+      if (localStorage.getItem(key)) {
+        alert("Nama playlist sudah digunakan.");
+        return;
+      }
+
+      localStorage.setItem(key, JSON.stringify([]));
+      loadPlaylists();
+    }
+
+    loadPlaylists();
+  </script>
+</body>
+</html>
