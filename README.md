@@ -27,10 +27,11 @@ https://campersand.github.io/chordopad/index.html
 3. Playlist
 - Rapikan sejumlah chordo-chordo mu di sebuah folder disebut playlist. 
 - Chordo di dalam playlist bisa di urut, misal untuk pelayanan acara, ibadah, dll
+- Di urut dengan drag lagunya <----!!!!
 
 4. Berbagi via URL
 - Pengen orang lain lihat chordomu dan bisa dia transpos? Ga usah screenshot, kasih aja dia link dan boom! Tersimpan di HP nya!  
 - Bisa generate link lewat preview lagu, dan impor di halaman depan
 
-5. Nanti gw tambahin lagi. Mager coeg  😋
+6. Nanti gw tambahin lagi. Mager coeg  😋
 
