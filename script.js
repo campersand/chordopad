@@ -255,27 +255,29 @@ function exportSong() {
     return;
   }
 
-  let song;
-  try {
-    song = JSON.parse(raw);
-  } catch (e) {
-    alert("Data lagu rusak.");
-    return;
-  }
+  const PASTEBIN_DEV_KEY = 'kGCBY1wIb2tRPCDHn1tW-FQ8FODE04J6'; // <---- GANTI DI SINI
 
-  // Tambahkan title ke data jika belum ada
-  if (!song.title) {
-    song.title = title;
-  }
+  const formData = new URLSearchParams();
+  formData.append("api_dev_key", PASTEBIN_DEV_KEY);
+  formData.append("api_option", "paste");
+  formData.append("api_paste_code", title); // optional: paste title
+  formData.append("api_paste_name", title); // optional: shows in pastebin UI
+  formData.append("api_paste_data", raw);
+  formData.append("api_paste_format", "json");
+  formData.append("api_paste_private", "1"); // unlisted (0=public, 1=unlisted, 2=private)
 
-  fetch("https://jsonblob.com/api/jsonBlob", {
+  fetch("https://pastebin.com/api/api_post.php", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(song)
+    body: formData
   })
-    .then(res => res.headers.get("Location"))
+    .then(res => res.text())
     .then(link => {
-      prompt("Copy link ini dan kirim ke temanmu:", link);
+      if (link.startsWith("http")) {
+        const rawLink = link.replace("pastebin.com/", "pastebin.com/raw/");
+        prompt("Berhasil! Copy link ini untuk dibagikan:", rawLink);
+      } else {
+        alert("Gagal menyimpan ke Pastebin:\n" + link);
+      }
     })
     .catch(err => {
       console.error(err);
@@ -284,19 +286,16 @@ function exportSong() {
 }
 
 function importSongFromURL() {
-  const input = prompt("Masukkan URL lagu (file JSON):");
+  const input = prompt("Masukkan URL Pastebin (raw):\nContoh: https://pastebin.com/raw/lembudahbelidahbelah");
   if (!input) return;
 
-  const secureURL = input.replace(/^http:/, "https:");
-  const proxyURL = encodeURIComponent(secureURL);
-
-  fetch(proxyURL)
+  fetch(input)
     .then(async res => {
       const text = await res.text();
       try {
         const data = JSON.parse(text);
         if (!data.title || !data.content) {
-          alert("Format lagu tidak valid.");
+          alert("Format lagu tidak valid.. coba cek isi linknya :D");
           return;
         }
 
@@ -307,7 +306,7 @@ function importSongFromURL() {
         }
       } catch (err) {
         console.error("Gagal parsing:", text);
-        alert("Respon bukan format JSON yang valid.");
+        alert("Respon bukan format JSON yang valid, sorry :(");
       }
     })
     .catch(err => {
