@@ -284,37 +284,41 @@ function exportSong() {
 }
 
 function importSongFromURL() {
-  const url = prompt("Masukkan URL lagu (file JSON):");
-  if (!url) return;
+  const input = prompt("Masukkan URL lagu (file JSON):");
+  if (!input) return;
 
-  fetch(url)
-    .then(res => res.json())
-    .then(data => {
-      // Kalau data array, ambil elemen pertama
-      if (Array.isArray(data)) {
-        data = data[0];
+  const secureURL = input.replace(/^http:/, "https:");
+  const proxyURL = "https://corsproxy.io/?" + encodeURIComponent(secureURL);
+
+  fetch(proxyURL)
+    .then(async res => {
+      const text = await res.text();
+      try {
+        const data = JSON.parse(text);
+        if (!data.title || !data.content) {
+          alert("Format lagu tidak valid.");
+          return;
+        }
+
+        if (confirm(`Impor lagu "${data.title}" ke penyimpanan?`)) {
+          localStorage.setItem(`song_${data.title}`, JSON.stringify(data));
+          alert(`Lagu "${data.title}" telah disimpan!`);
+          location.href = `preview.html?title=${encodeURIComponent(data.title)}`;
+        }
+      } catch (err) {
+        console.error("Gagal parsing:", text);
+        alert("Respon bukan format JSON yang valid.");
       }
-
-      if (!data.title || !data.content) {
-        alert("Format lagu tidak valid.");
-        return;
-      }
-
-      const key = `song_${data.title}`;
-      if (localStorage.getItem(key)) {
-        const overwrite = confirm(`Lagu "${data.title}" sudah ada. Timpa?`);
-        if (!overwrite) return;
-      }
-
-      localStorage.setItem(key, JSON.stringify(data));
-      alert(`Lagu "${data.title}" telah disimpan!`);
-      location.reload();
     })
     .catch(err => {
-      alert("Gagal mengambil lagu dari URL.");
       console.error(err);
+      alert("Gagal mengambil lagu dari URL.");
     });
 }
+
+
+
+
 
 
 
