@@ -288,7 +288,7 @@ function importSongFromURL() {
   if (!input) return;
 
   const secureURL = input.replace(/^http:/, "https:");
-  const proxyURL = "https://corsproxy.io/?" + encodeURIComponent(secureURL);
+  const proxyURL = encodeURIComponent(secureURL);
 
   fetch(proxyURL)
     .then(async res => {
